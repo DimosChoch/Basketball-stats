@@ -16,11 +16,18 @@ ALL_COLUMNS = [
     "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "Κερδισμένα Φαουλ", "PIR"
 ]
 
+# 🔥 Κουμπί για καθαρισμό μνήμης στο sidebar
+if st.sidebar.button("🔄 Ανανέωση & Καθαρισμός Μνήμης"):
+    st.cache_data.clear()
+    st.rerun()
+
 def load_data():
     if os.path.exists(EXCEL_FILE):
         try:
             loaded_df = pd.read_excel(EXCEL_FILE)
             loaded_df.columns = loaded_df.columns.astype(str).str.strip()
+            
+            # Μετατροπή όλων των στατιστικών σε αριθμούς
             numeric_cols = [
                 "Χρόνος", "Πόντοι", "Βολές Εύστοχες", "Βολές Συνολικές", "Βολές %",
                 "Δίποντα Εύστοχα", "Δίποντα Συνολικά", "Δίποντα %", "Τρίποντα Εύστοχα", 
@@ -183,7 +190,3 @@ elif menu == "Ανάλυση & Γραφήματα":
         stat_to_plot = st.selectbox("Επιλέξτε Στατιστικό για το Γράφημα", numeric_cols)
         
         match_df[stat_to_plot] = match_df[stat_to_plot].astype(float)
-        fig = px.bar(match_df, x="Παίκτης", y=stat_to_plot, text_auto=True, color="PIR", color_continuous_scale="Viridis", title=f"{stat_to_plot} ανά Παίκτη")
-        st.plotly_chart(fig, use_container_width=True)
-
-# --- 4. ΜΕΣΟΙ ΟΡΟΙ ΠΑΙΚΤΩΝ (SEASON) ---
