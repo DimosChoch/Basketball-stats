@@ -16,6 +16,10 @@ ALL_COLUMNS = [
     "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "Κερδισμένα Φαουλ", "PIR"
 ]
 
+if st.sidebar.button("🔄 Ανανέωση & Καθαρισμός Μνήμης"):
+    st.cache_data.clear()
+    st.rerun()
+
 def load_data():
     if os.path.exists(EXCEL_FILE):
         try:
