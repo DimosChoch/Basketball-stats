@@ -170,11 +170,15 @@ elif menu == "Ανάλυση & Γραφήματα":
         
         display_df = pd.concat([match_df, pd.DataFrame([team_sums])], ignore_index=True)
         
-        # 🔥 ΠΡΟΣΘΗΚΗ: Συναρτήση που βάφει τη γραμμή γαλάζια και bold αν βρει "ΝΑΙ"
+        # ✨ ΝΕΟΣ ΤΡΟΠΟΣ: Προσθήκη emoji ⭐ στους starters για να ξεχωρίζουν σε Dark Mode
+        if "Starting Five" in match_df.columns:
+            match_df.loc[match_df["Starting Five"].str.strip().str.upper() == "ΝΑΙ", "Παίκτης"] = "⭐ " + match_df["Παίκτης"]
+
         def highlight_starters(row):
-            if str(row["Starting Five"]).strip().upper() == "ΝΑΙ":
-                return ['background-color: #e6f3ff; font-weight: bold;'] * len(row)
+            if "⭐" in str(row["Παίκτης"]):
+                return ['font-weight: bold; color: #ffaa00;'] * len(row) # Έντονα χρυσά γράμματα
             return [''] * len(row)
+
 
         # Λίστα στηλών για προβολή (βάλαμε και τη στήλη Starting Five για να φαίνεται)
         columns_view = [
