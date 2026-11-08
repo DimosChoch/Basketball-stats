@@ -13,7 +13,7 @@ ALL_COLUMNS = [
     "Δίποντα Εύστοχα", "Δίποντα Συνολικά", "Δίποντα %",
     "Τρίποντα Εύστοχα", "Τρίποντα Συνολικά", "Τρίποντα %",
     "Ριμπάουντ Αμυντικά", "Ριμπάουντ Επιθετικά", "Ριμπάουντ Σύνολο",
-    "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "Κερδισμένα Φαουλ", "PIR"
+    "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "Κερδισμένα Φαουλ", "PIR", "Starting Five"
 ]
 
 if st.sidebar.button("🔄 Ανανέωση & Καθαρισμός Μνήμης"):
@@ -81,7 +81,8 @@ elif menu == "Εισαγωγή Στατιστικών":
             player_name = st.selectbox("Επιλέξτε Παίκτη", PLAYERS_LIST)
         with col_m4:
             minutes = st.number_input("Χρόνος (Λεπτά)", min_value=0, value=15, step=1)
-            
+            is_starter = st.checkbox("Βασική Πεντάδα (Starter);")
+
         st.markdown("---")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -133,6 +134,7 @@ elif menu == "Εισαγωγή Στατιστικών":
                     "Ριμπάουντ Αμυντικά": dreb, "Ριμπάουντ Επιθετικά": oreb, "Ριμπάουντ Σύνολο": tot_reb,
                     "Ασίστ": assists, "Κλεψίματα": steals, "Λάθη": turnovers, "Μπλοκ": blocks,
                     "Φαουλ": fouls, "Κερδισμένα Φαουλ": fouls_drawn, "PIR": pir
+		    "Starting Five": "ΝΑΙ" if is_starter else "ΟΧΙ"
                 }
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
                 save_data(df)
