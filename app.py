@@ -35,12 +35,10 @@ def load_data():
                 if col in loaded_df.columns:
                     loaded_df[col] = pd.to_numeric(loaded_df[col], errors='coerce').fillna(0)
             return loaded_df
-        except:
+        except Exception as e:
+            st.sidebar.error(f"Σφάλμα ανάγνωσης Excel: {e}")
             return pd.DataFrame(columns=ALL_COLUMNS)
     return pd.DataFrame(columns=ALL_COLUMNS)
-
-def save_data(df):
-    df.to_excel(EXCEL_FILE, index=False)
 
 df = load_data()
 
@@ -137,7 +135,7 @@ elif menu == "Εισαγωγή Στατιστικών":
                     "Φαουλ": fouls, "Κερδισμένα Φαουλ": fouls_drawn, "PIR": pir
                 }
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-                save_data(df)
+                df.to_excel(EXCEL_FILE, index=False)
                 st.success(f"✅ Ο παίκτης {player_name} καταχωρήθηκε!")
 
 # --- 3. ΑΝΑΛΥΣΗ & ΓΡΑΦΗΜΑΤΑ ---
@@ -146,45 +144,44 @@ elif menu == "Ανάλυση & Γραφήματα":
     if df.empty:
         st.warning("Δεν υπάρχουν δεδομένα.")
     else:
-        selected_match = st.selectbox("Επιλέξτε Αγώνας", df["Αγώνας"].unique())
-        match_df = df[df["Αγώνας"] == selected_match].copy()
-        
-        # 🛡️ ΔΙΟΡΘΩΘΗΚΕ: Παίρνει σωστά την πρώτη τιμή του κειμένου
-        match_res = str(match_df["Αποτέλεσμα"].iloc[0]) if not match_df.empty else "ΝΙΚΗ"
-        st.subheader(f"Αποτέλεσμα Αγώνα: {match_res}")
-        
-        team_sums = {
-            "Αγώνας": selected_match, "Αποτέλεσμα": match_res, "Παίκτης": "🏀 ΣΥΝΟΛΟ ΟΜΑΔΑΣ",
-            "Χρόνος": match_df["Χρόνος"].sum(), "Πόντοι": match_df["Πόντοι"].sum(),
-            "Βολές Εύστοχες": match_df["Βολές Εύστοχες"].sum(), "Βολές Συνολικές": match_df["Βολές Συνολικές"].sum(),
-            "Βολές %": 0.0,
-            "Δίποντα Εύστοχα": match_df["Δίποντα Εύστοχα"].sum(), "Δίποντα Συνολικά": match_df["Δίποντα Συνολικά"].sum(),
-            "Δίποντα %": 0.0,
-            "Τρίποντα Εύστοχα": match_df["Τρίποντα Εύστοχα"].sum(), "Τρίποντα Συνολικά": match_df["Τρίποντα Συνολικά"].sum(),
-            "Τρίποντα %": 0.0,
-            "Ριμπάουντ Αμυντικά": match_df["Ριμπάουντ Αμυντικά"].sum(), "Ριμπάουντ Επιθετικά": match_df["Ριμπάουντ Επιθετικά"].sum(),
-            "Ριμπάουντ Σύνολο": match_df["Ριμπάουντ Σύνολο"].sum(), "Ασίστ": match_df["Ασίστ"].sum(),
-            "Κλεψίματα": match_df["Κλεψίματα"].sum(), "Λάθη": match_df["Λάθη"].sum(), "Μπλοκ": match_df["Μπλοκ"].sum(),
-            "Φαουλ": match_df["Φαουλ"].sum(), "Κερδισμένα Φαουλ": match_df["Κερδισμένα Φαουλ"].sum(), "PIR": match_df["PIR"].sum()
-        }
-        
-        if team_sums["Βολές Συνολικές"] > 0:
-            team_sums["Βολές %"] = round((team_sums["Βολές Εύστοχες"] / team_sums["Βολές Συνολικές"] * 100), 1)
-        if team_sums["Δίποντα Συνολικά"] > 0:
-            team_sums["Δίποντα %"] = round((team_sums["Δίποντα Εύστοχα"] / team_sums["Δίποντα Συνολικά"] * 100), 1)
-        if team_sums["Τρίποντα Συνολικά"] > 0:
-            team_sums["Τρίποντα %"] = round((team_sums["Τρίποντα Εύστοχα"] / team_sums["Τρίποντα Συνολικά"] * 100), 1)
+        try:
+            selected_match = st.selectbox("Επιλέξτε Αγώνας", df["Αγώνας"].unique())
+            match_df = df[df["Αγώνας"] == selected_match].copy()
             
-        display_df = pd.concat([match_df, pd.DataFrame([team_sums])], ignore_index=True)
-        st.dataframe(display_df[[
-            "Παίκτης", "Χρόνος", "Πόντοι", "Βολές Εύστοχες", "Βολές Συνολικές", "Βολές %",
-            "Δίποντα Εύστοχα", "Δίποντα Συνολικά", "Δίποντα %", "Τρίποντα Εύστοχα", "Τρίποντα Συνολικά", "Τρίποντα %",
-            "Ριμπάουντ Σύνολο", "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "PIR"
-        ]], height=400, hide_index=True)
-        
-        st.markdown("---")
-        st.subheader("👤 Σύγκριση Παικτών (Γράφημα)")
-        numeric_cols = [c for c in ALL_COLUMNS if c not in ["Αγώνας", "Παίκτης", "Βολές %", "Δίποντα %", "Τρίποντα %", "Αποτέλεσμα"]]
-        stat_to_plot = st.selectbox("Επιλέξτε Στατιστικό για το Γράφημα", numeric_cols)
-        
-        match_df[stat_to_plot] = match_df[stat_to_plot].astype(float)
+            match_res = str(match_df["Αποτέλεσμα"].dropna().iloc[0]) if not match_df.empty else "ΝΙΚΗ"
+            st.subheader(f"Αποτέλεσμα Αγώνα: {match_res}")
+            
+            team_sums = {
+                "Αγώνας": selected_match, "Αποτέλεσμα": match_res, "Παίκτης": "🏀 ΣΥΝΟΛΟ ΟΜΑΔΑΣ",
+                "Χρόνος": match_df["Χρόνος"].sum(), "Πόντοι": match_df["Πόντοι"].sum(),
+                "Βολές Εύστοχες": match_df["Βολές Εύστοχες"].sum(), "Βολές Συνολικές": match_df["Βολές Συνολικές"].sum(),
+                "Βολές %": 0.0,
+                "Δίποντα Εύστοχα": match_df["Δίποντα Εύστοχα"].sum(), "Δίποντα Συνολικά": match_df["Δίποντα Συνολικά"].sum(),
+                "Δίποντα %": 0.0,
+                "Τρίποντα Εύστοχα": match_df["Τρίποντα Εύστοχα"].sum(), "Τρίποντα Συνολικά": match_df["Τρίποντα Συνολικά"].sum(),
+                "Τρίποντα %": 0.0,
+                "Ριμπάουντ Αμυντικά": match_df["Ριμπάουντ Αμυντικά"].sum(), "Ριμπάουντ Επιθετικά": match_df["Ριμπάουντ Επιθετικά"].sum(),
+                "Ριμπάουντ Σύνολο": match_df["Ριμπάουντ Σύνολο"].sum(), "Ασίστ": match_df["Ασίστ"].sum(),
+                "Κλεψίματα": match_df["Κλεψίματα"].sum(), "Λάθη": match_df["Λάθη"].sum(), "Μπλοκ": match_df["Μπλοκ"].sum(),
+                "Φαουλ": match_df["Φαουλ"].sum(), "Κερδισμένα Φαουλ": match_df["Κερδισμένα Φαουλ"].sum(), "PIR": match_df["PIR"].sum()
+            }
+            
+            if team_sums["Βολές Συνολικές"] > 0:
+                team_sums["Βολές %"] = round((team_sums["Βολές Εύστοχες"] / team_sums["Βολές Συνολικές"] * 100), 1)
+            if team_sums["Δίποντα Συνολικά"] > 0:
+                team_sums["Δίποντα %"] = round((team_sums["Δίποντα Εύστοχα"] / team_sums["Δίποντα Συνολικά"] * 100), 1)
+            if team_sums["Τρίποντα Συνολικά"] > 0:
+                team_sums["Τρίποντα %"] = round((team_sums["Τρίποντα Εύστοχα"] / team_sums["Τρίποντα Συνολικά"] * 100), 1)
+                
+            display_df = pd.concat([match_df, pd.DataFrame([team_sums])], ignore_index=True)
+            st.dataframe(display_df[[
+                "Παίκτης", "Χρόνος", "Πόντοι", "Βολές Εύστοχες", "Βολές Συνολικές", "Βολές %",
+                "Δίποντα Εύστοχα", "Δίποντα Συνολικά", "Δίποντα %", "Τρίποντα Εύστοχα", "Τρίποντα Συνολικά", "Τρίποντα %",
+                "Ριμπάουντ Σύνολο", "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "PIR"
+            ]], height=400, hide_index=True)
+            
+            st.markdown("---")
+            st.subheader("👤 Σύγκριση Παικτών (Γράφημα)")
+            numeric_cols = [c for c in ALL_COLUMNS if c not in ["Αγώνας", "Παίκτης", "Βολές %", "Δίποντα %", "Τρίποντα %", "Αποτέλεσμα"]]
+            stat_to_plot = st.selectbox("Επιλέξτε Στατιστικό για το Γράφημα", numeric_cols)
+            
