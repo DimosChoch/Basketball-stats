@@ -22,7 +22,7 @@ def load_data():
             loaded_df = pd.read_excel(EXCEL_FILE)
             loaded_df.columns = loaded_df.columns.astype(str).str.strip()
             
-            # 🔥 ΕΞΑΝΑΓΚΑΣΜΟΣ ΜΕΤΑΤΡΟΠΗΣ ΣΕ ΚΑΘΑΡΟΥΣ ΑΡΙΘΜΟΥΣ ΓΙΑ ΟΛΑ ΤΑ ΣΤΑΤΙΣΤΙΚΑ
+            # 🔥 ΕΞΑΝΑΓΚΑΣΜΟΣ: Μετατροπή όλων των στατιστικών στηλών σε καθαρούς αριθμούς
             numeric_cols = [
                 "Χρόνος", "Πόντοι", "Βολές Εύστοχες", "Βολές Συνολικές", "Βολές %",
                 "Δίποντα Εύστοχα", "Δίποντα Συνολικά", "Δίποντα %", "Τρίποντα Εύστοχα", 
@@ -31,7 +31,6 @@ def load_data():
             ]
             for col in numeric_cols:
                 if col in loaded_df.columns:
-                    # Μετατρέπουμε σε αριθμό, αν έχει γράμμα το κάνει NaN, και μετά το κάνει 0
                     loaded_df[col] = pd.to_numeric(loaded_df[col], errors='coerce').fillna(0).astype(float)
             return loaded_df
         except:
@@ -148,8 +147,7 @@ elif menu == "Ανάλυση & Γραφήματα":
     selected_match = st.selectbox("Επιλέξτε Αγώνας", df["Αγώνας"].unique())
     match_df = df[df["Αγώνας"] == selected_match].copy()
     
-    # Εμφάνιση του αποτελέσματος καθαρά
-    match_res = str(match_df["Αποτέλεσμα"].values[0]) if not match_df.empty else "Νίκη"
+    match_res = str(match_df["Αποτέλεσμα"].iloc[0]) if not match_df.empty else "Νίκη"
     st.subheader(f"Αποτέλεσμα Αγώνα: {match_res}")
     
     team_sums = {
@@ -186,7 +184,8 @@ elif menu == "Ανάλυση & Γραφήματα":
     numeric_cols = [c for c in ALL_COLUMNS if c not in ["Αγώνας", "Παίκτης", "Βολές %", "Δίποντα %", "Τρίποντα %", "Αποτέλεσμα"]]
     stat_to_plot = st.selectbox("Επιλέξτε Στατιστικό για το Γράφημα", numeric_cols)
     
-    # Σχεδίαση γραφήματος
+    # 🔥 ΕΞΑΝΑΓΚΑΣΜΟΣ: Μετατροπή της στήλης σε float για να σχεδιαστεί το γράφημα οπωσδήποτε
+    match_df[stat_to_plot] = match_df[stat_to_plot].astype(float)
     fig = px.bar(match_df, x="Παίκτης", y=stat_to_plot, text_auto=True, color="PIR", color_continuous_scale="Viridis", title=f"{stat_to_plot} ανά Παίκτη")
     st.plotly_chart(fig, use_container_width=True)
 
