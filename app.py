@@ -187,9 +187,19 @@ elif menu == "Ανάλυση & Γραφήματα":
             "Ριμπάουντ Σύνολο", "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "PIR"
         ]
         
-        # Εφαρμογή του στυλ και εμφάνιση στην οθόνη με 400 ύψος όπως το είχες
+        # Εφαρμογή του bold/χρώματος στους starters
         styled_df = display_df[columns_view].style.apply(highlight_starters, axis=1)
+        
+        # 🔥 ΠΡΟΣΘΗΚΗ: Εξαναγκασμός εμφάνισης των ποσοστών % με ακριβώς 1 δεκαδικό ψηφίο
+        styled_df = styled_df.format({
+            "Βολές %": "{:.1f}%",
+            "Δίποντα %": "{:.1f}%",
+            "Τρίποντα %": "{:.1f}%"
+        })
+        
+        # Εμφάνιση του τελικού, πανέμορφου πίνακα
         st.dataframe(styled_df, height=400, use_container_width=True, hide_index=True)
+
 
         
         st.markdown("---")
