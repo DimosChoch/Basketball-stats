@@ -16,7 +16,6 @@ ALL_COLUMNS = [
     "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "Κερδισμένα Φαουλ", "PIR"
 ]
 
-# 🔥 Κουμπί για καθαρισμό μνήμης στο sidebar
 if st.sidebar.button("🔄 Ανανέωση & Καθαρισμός Μνήμης"):
     st.cache_data.clear()
     st.rerun()
@@ -26,8 +25,6 @@ def load_data():
         try:
             loaded_df = pd.read_excel(EXCEL_FILE)
             loaded_df.columns = loaded_df.columns.astype(str).str.strip()
-            
-            # Μετατροπή όλων των στατιστικών σε αριθμούς
             numeric_cols = [
                 "Χρόνος", "Πόντοι", "Βολές Εύστοχες", "Βολές Συνολικές", "Βολές %",
                 "Δίποντα Εύστοχα", "Δίποντα Συνολικά", "Δίποντα %", "Τρίποντα Εύστοχα", 
@@ -152,7 +149,8 @@ elif menu == "Ανάλυση & Γραφήματα":
         selected_match = st.selectbox("Επιλέξτε Αγώνας", df["Αγώνας"].unique())
         match_df = df[df["Αγώνας"] == selected_match].copy()
         
-        match_res = str(match_df["Αποτέλεσμα"].values[0]) if not match_df.empty else "ΝΙΚΗ"
+        # 🛡️ ΔΙΟΡΘΩΘΗΚΕ: Παίρνει σωστά την πρώτη τιμή του κειμένου
+        match_res = str(match_df["Αποτέλεσμα"].iloc[0]) if not match_df.empty else "ΝΙΚΗ"
         st.subheader(f"Αποτέλεσμα Αγώνα: {match_res}")
         
         team_sums = {
