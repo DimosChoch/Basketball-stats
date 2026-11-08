@@ -134,8 +134,9 @@ elif menu == "Εισαγωγή Στατιστικών":
                     "Ριμπάουντ Αμυντικά": dreb, "Ριμπάουντ Επιθετικά": oreb, "Ριμπάουντ Σύνολο": tot_reb,
                     "Ασίστ": assists, "Κλεψίματα": steals, "Λάθη": turnovers, "Μπλοκ": blocks,
                     "Φαουλ": fouls, "Κερδισμένα Φαουλ": fouls_drawn, "PIR": pir
-		    "Starting Five": "ΝΑΙ" if is_starter else "ΟΧΙ"
                 }
+                new_row["Starting Five"] = "ΝΑΙ" if is_starter else "ΟΧΙ"
+
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
                 save_data(df)
                 st.success(f"✅ Ο παίκτης {player_name} καταχωρήθηκε!")
