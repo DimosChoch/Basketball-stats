@@ -5,7 +5,6 @@ import os
 
 EXCEL_FILE = "basketball_stats_pro.xlsx"
 
-# 🏀 Η ΣΤΑΘΕΡΗ ΛΙΣΤΑ ΜΕ ΤΟΥΣ 17 ΠΑΙΚΤΕΣ ΣΟΥ (Για το Dropdown της εισαγωγής)
 FIXED_PLAYERS_LIST = ["Μέλε", "Χοχλ", "Σταμ", "Κουκου", "Δραμ", "Κοντο", "Πιτα", "Κρητι", "Μηλιω", "Φουντου", "Μανου", "Στρι", "Γκοτσο", "Κυρια", "Παπα", "Γιαννα", "Δελ"]
 
 ALL_COLUMNS = [
@@ -54,7 +53,7 @@ menu = st.sidebar.selectbox("Μενού Επιλογών", [
     "Εισαγωγή Στατιστικών", 
     "Ανάλυση & Γραφήματα", 
     "Μέσοι Όροι Παικτών (Season)",
-    "Μενού Μέσων Όρων (Νίκες vs Ήττες)"
+    "Μέσοι Όροι (Νίκες vs Ήττες)"
 ])
 
 # --- 1. ΠΡΟΒΟΛΗ ΔΕΔΟΜΕΝΩΝ ---
@@ -146,7 +145,7 @@ elif menu == "Ανάλυση & Γραφήματα":
         selected_match = st.selectbox("Επιλέξτε Αγώνας", df["Αγώνας"].unique())
         match_df = df[df["Αγώνας"] == selected_match].copy()
         
-        match_res = str(match_df["Αποτέλεσμα"].values) if not match_df.empty else "ΝΙΚΗ"
+        match_res = str(match_df["Αποτέλεσμα"].values[0]) if not match_df.empty else "ΝΙΚΗ"
         st.subheader(f"Αποτέλεσμα Αγώνα: {match_res}")
         
         team_sums = {
@@ -185,3 +184,6 @@ elif menu == "Ανάλυση & Γραφήματα":
         
         match_df[stat_to_plot] = match_df[stat_to_plot].astype(float)
         fig = px.bar(match_df, x="Παίκτης", y=stat_to_plot, text_auto=True, color="PIR", color_continuous_scale="Viridis", title=f"{stat_to_plot} ανά Παίκτη")
+        st.plotly_chart(fig, use_container_width=True)
+
+# --- 4. ΜΕΣΟΙ ΟΡΟΙ ΠΑΙΚΤΩΝ (SEASON) ---
