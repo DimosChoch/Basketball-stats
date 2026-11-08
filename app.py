@@ -168,7 +168,7 @@ elif menu == "Ανάλυση & Γραφήματα":
             "Φαουλ": match_df["Φαουλ"].sum(), "Κερδισμένα Φαουλ": match_df["Κερδισμένα Φαουλ"].sum(), "PIR": match_df["PIR"].sum()
         }
         
-                display_df = pd.concat([match_df, pd.DataFrame([team_sums])], ignore_index=True)
+        display_df = pd.concat([match_df, pd.DataFrame([team_sums])], ignore_index=True)
         
         # 🔥 ΠΡΟΣΘΗΚΗ: Συναρτήση που βάφει τη γραμμή γαλάζια και bold αν βρει "ΝΑΙ"
         def highlight_starters(row):
