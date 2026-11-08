@@ -54,7 +54,7 @@ menu = st.sidebar.selectbox("Μενού Επιλογών", [
     "Εισαγωγή Στατιστικών", 
     "Ανάλυση & Γραφήματα", 
     "Μέσοι Όροι Παικτών (Season)",
-    "Μέσοι Όροι (Νίκες vs Ήττες)"
+    "Μενού Μέσων Όρων (Νίκες vs Ήττες)"
 ])
 
 # --- 1. ΠΡΟΒΟΛΗ ΔΕΔΟΜΕΝΩΝ ---
@@ -77,7 +77,6 @@ elif menu == "Εισαγωγή Στατιστικών":
         with col_m2:
             match_result = st.selectbox("Αποτέλεσμα Αγώνα", ["ΝΙΚΗ", "ΗΤΤΑ"])
         with col_m3:
-            # 🔥 Χρησιμοποιεί τη σταθερή λίστα με όλους τους παίκτες
             player_name = st.selectbox("Επιλέξτε Παίκτη", FIXED_PLAYERS_LIST)
         with col_m4:
             minutes = st.number_input("Χρόνος (Λεπτά)", min_value=0, value=15, step=1)
@@ -185,3 +184,4 @@ elif menu == "Ανάλυση & Γραφήματα":
         stat_to_plot = st.selectbox("Επιλέξτε Στατιστικό για το Γράφημα", numeric_cols)
         
         match_df[stat_to_plot] = match_df[stat_to_plot].astype(float)
+        fig = px.bar(match_df, x="Παίκτης", y=stat_to_plot, text_auto=True, color="PIR", color_continuous_scale="Viridis", title=f"{stat_to_plot} ανά Παίκτη")
