@@ -168,12 +168,25 @@ elif menu == "Ανάλυση & Γραφήματα":
             "Φαουλ": match_df["Φαουλ"].sum(), "Κερδισμένα Φαουλ": match_df["Κερδισμένα Φαουλ"].sum(), "PIR": match_df["PIR"].sum()
         }
         
-        display_df = pd.concat([match_df, pd.DataFrame([team_sums])], ignore_index=True)
-        st.dataframe(display_df[[
-            "Παίκτης", "Χρόνος", "Πόντοι", "Βολές Εύστοχες", "Βολές Συνολικές", "Βολές %",
+                display_df = pd.concat([match_df, pd.DataFrame([team_sums])], ignore_index=True)
+        
+        # 🔥 ΠΡΟΣΘΗΚΗ: Συναρτήση που βάφει τη γραμμή γαλάζια και bold αν βρει "ΝΑΙ"
+        def highlight_starters(row):
+            if str(row["Starting Five"]).strip().upper() == "ΝΑΙ":
+                return ['background-color: #e6f3ff; font-weight: bold;'] * len(row)
+            return [''] * len(row)
+
+        # Λίστα στηλών για προβολή (βάλαμε και τη στήλη Starting Five για να φαίνεται)
+        columns_view = [
+            "Παίκτης", "Starting Five", "Χρόνος", "Πόντοι", "Βολές Εύστοχες", "Βολές Συνολικές", "Βολές %",
             "Δίποντα Εύστοχα", "Δίποντα Συνολικά", "Δίποντα %", "Τρίποντα Εύστοχα", "Τρίποντα Συνολικά", "Τρίποντα %",
             "Ριμπάουντ Σύνολο", "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "PIR"
-        ]], height=400, hide_index=True)
+        ]
+        
+        # Εφαρμογή του στυλ και εμφάνιση στην οθόνη με 400 ύψος όπως το είχες
+        styled_df = display_df[columns_view].style.apply(highlight_starters, axis=1)
+        st.dataframe(styled_df, height=400, use_container_width=True, hide_index=True)
+
         
         st.markdown("---")
         st.subheader("👤 Σύγκριση Παικτών (Γράφημα)")
