@@ -25,6 +25,8 @@ def load_data():
         try:
             loaded_df = pd.read_excel(EXCEL_FILE)
             loaded_df.columns = loaded_df.columns.astype(str).str.strip()
+            
+            # 🔥 Απόλυτος εξαναγκασμός μετατροπής σε αριθμούς κατά το φορτωμα
             numeric_cols = [
                 "Χρόνος", "Πόντοι", "Βολές Εύστοχες", "Βολές Συνολικές", "Βολές %",
                 "Δίποντα Εύστοχα", "Δίποντα Συνολικά", "Δίποντα %", "Τρίποντα Εύστοχα", 
@@ -38,6 +40,9 @@ def load_data():
         except:
             return pd.DataFrame(columns=ALL_COLUMNS)
     return pd.DataFrame(columns=ALL_COLUMNS)
+
+def save_data(df):
+    df.to_excel(EXCEL_FILE, index=False)
 
 df = load_data()
 
@@ -183,5 +188,4 @@ elif menu == "Ανάλυση & Γραφήματα":
         numeric_cols = [c for c in ALL_COLUMNS if c not in ["Αγώνας", "Παίκτης", "Βολές %", "Δίποντα %", "Τρίποντα %", "Αποτέλεσμα"]]
         stat_to_plot = st.selectbox("Επιλέξτε Στατιστικό για το Γράφημα", numeric_cols)
         
-        match_df[stat_to_plot] = match_df[stat_to_plot].astype(float)
-        fig = px.bar(match_df, x="Παίκτης", y=stat_to_plot, text_auto=True, color="PIR", color_continuous_scale="Viridis", title=f"{stat_to_plot} ανά Παίκτη")
+        # Μετατροπή στήλης σε καθαρό float64 πριν τη σχεδίαση
