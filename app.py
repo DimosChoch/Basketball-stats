@@ -56,7 +56,9 @@ if not df.empty:
 menu = st.sidebar.selectbox("Μενού Επιλογών", [
     "Προβολή Δεδομένων",
     "Εισαγωγή Στατιστικών", 
-    "Ανάλυση & Γραφήματα"
+    "Ανάλυση & Γραφήματα",
+    "Μέσοι Όροι Παικτών (Season)",
+    "Μέσοι Όροι (Νίκες vs Ήττες)"
 ])
 
 # --- 1. ΠΡΟΒΟΛΗ ΔΕΔΟΜΕΝΩΝ ---
@@ -213,3 +215,141 @@ elif menu == "Ανάλυση & Γραφήματα":
         stat_to_plot = st.selectbox("Επιλέξτε Στατιστικό για το Γράφημα", numeric_cols)
         fig = px.bar(match_df, x="Παίκτης", y=stat_to_plot, text_auto=True, color="PIR", color_continuous_scale="Viridis", title=f"{stat_to_plot} ανά Παίκτη")
         st.plotly_chart(fig, use_container_width=True)
+
+# --- 4. ΜΕΣΟΙ ΟΡΟΙ ΠΑΙΚΤΩΝ (SEASON) ---
+elif menu == "Μέσοι Όροι Παικτών (Season)":
+    st.header("📈 Μέσοι Όροι Παικτών για τη Σεζόν")
+    if df.empty:
+        st.warning("Δεν υπάρχουν ακόμα δεδομένα.")
+    else:
+        # Καθαρίζουμε τα ονόματα από τυχόν αστέρια για να γίνει σωστά το φιλτράρισμα
+        unique_players = sorted(list(df["Παίκτης"].astype(str).str.replace("⭐ ", "").unique()))
+        season_rows = []
+        
+        for p in unique_players:
+            p_df = df[df["Παίκτης"].astype(str).str.contains(p)]
+            if p_df.empty:
+                continue
+                
+            ftm_s = pd.to_numeric(p_df["Βολές Εύστοχες"]).sum()
+            fta_s = pd.to_numeric(p_df["Βολές Συνολικές"]).sum()
+            fg2m_s = pd.to_numeric(p_df["Δίποντα Εύστοχα"]).sum()
+            fg2a_s = pd.to_numeric(p_df["Δίποντα Συνολικά"]).sum()
+            fg3m_s = pd.to_numeric(p_df["Τρίποντα Εύστοχα"]).sum()
+            fg3a_s = pd.to_numeric(p_df["Τρίποντα Συνολικά"]).sum()
+            
+            season_rows.append({
+                "Παίκτης": p,
+                "Αγώνες": int(len(p_df)),
+                "Χρόνος": round(pd.to_numeric(p_df["Χρόνος"]).mean(), 1),
+                "Πόντοι": round(pd.to_numeric(p_df["Πόντοι"]).mean(), 1),
+                "Βολές %": round((ftm_s / fta_s * 100), 1) if fta_s > 0 else 0.0,
+                "Δίποντα %": round((fg2m_s / fg2a_s * 100), 1) if fg2a_s > 0 else 0.0,
+                "Τρίποντα %": round((fg3m_s / fg3a_s * 100), 1) if fg3a_s > 0 else 0.0,
+                "Ριμπάουντ Σύνολο": round(pd.to_numeric(p_df["Ριμπάουντ Σύνολο"]).mean(), 1),
+                "Ασίστ": round(pd.to_numeric(p_df["Ασίστ"]).mean(), 1),
+                "Κλεψίματα": round(pd.to_numeric(p_df["Κλεψίματα"]).mean(), 1),
+                "Λάθη": round(pd.to_numeric(p_df["Λάθη"]).mean(), 1),
+                "Μπλοκ": round(pd.to_numeric(p_df["Μπλοκ"]).mean(), 1),
+                "Φαουλ": round(pd.to_numeric(p_df["Φαουλ"]).mean(), 1),
+                "PIR": round(pd.to_numeric(p_df["PIR"]).mean(), 1)
+            })
+            
+        player_stats_clean = pd.DataFrame(season_rows)
+        
+        # Μορφοποίηση με 1 δεκαδικό χωρίς το σύμβολο %
+        styled_season = player_stats_clean.style.format({
+            "Βολές %": "{:.1f}", "Δίποντα %": "{:.1f}", "Τρίποντα %": "{:.1f}"
+        })
+        st.dataframe(styled_season, use_container_width=True, hide_index=True)
+        
+        st.markdown("---")
+        st.subheader("📈 Διακύμανση Απόδοσης ανά Παίκτη")
+        selected_player = st.selectbox("Επιλέξτε Παίκτη για να δείτε την πορεία του", unique_players)
+        player_history = df[df["Παίκτης"].astype(str).str.contains(selected_player)].sort_values(by="Αγώνας")
+        stat_history = st.selectbox("Επιλέξτε Στατιστικό για την πορεία", ["Πόντοι", "PIR", "Ασίστ", "Ριμπάουντ Σύνολο", "Λάθη"])
+        
+        player_history[stat_history] = pd.to_numeric(player_history[stat_history], errors='coerce').fillna(0).astype(float)
+        fig_history = px.bar(player_history, x="Αγώνας", y=stat_history, text_auto=True, title=f"Πορεία στην κατηγορία '{stat_history}' για τον παίκτη: {selected_player}")
+        st.plotly_chart(fig_history, use_container_width=True)
+
+# --- 5. ΜΕΣΟΙ ΟΡΟΙ (ΝΙΚΕΣ VS ΗΤΤΕΣ) ---
+elif menu == "Μέσοι Όροι (Νίκες vs Ήττες)":
+    st.header("📈 Σύγκριση Μέσων Όρων Ομάδας")
+    if df.empty:
+        st.warning("Δεν υπάρχουν δεδομένα.")
+    else:
+        unique_matches = df["Αγώνας"].dropna().unique()
+        match_sums_list = []
+        
+        for m in unique_matches:
+            m_df = df[df["Αγώνας"] == m]
+            if m_df.empty:
+                continue
+            res_val = str(m_df["Αποτέλεσμα"].dropna().iloc[0]).strip().upper() if not m_df.empty else "ΝΙΚΗ"
+            
+            match_sums_list.append({
+                "Αγώνας": m,
+                "Αποτέλεσμα": res_val,
+                "Πόντοι": pd.to_numeric(m_df["Πόντοι"]).sum(),
+                "Βολές Εύστοχες": pd.to_numeric(m_df["Βολές Εύστοχες"]).sum(),
+                "Βολές Συνολικές": pd.to_numeric(m_df["Βολές Συνολικές"]).sum(),
+                "Δίποντα Εύστοχα": pd.to_numeric(m_df["Δίποντα Εύστοχα"]).sum(),
+                "Δίποντα Συνολικά": pd.to_numeric(m_df["Δίποντα Συνολικά"]).sum(),
+                "Τρίποντα Εύστοχα": pd.to_numeric(m_df["Τρίποντα Εύστοχα"]).sum(),
+                "Τρίποντα Συνολικά": pd.to_numeric(m_df["Τρίποντα Συνολικά"]).sum(),
+                "Ριμπάουντ Σύνολο": pd.to_numeric(m_df["Ριμπάουντ Σύνολο"]).sum(),
+                "Ασίστ": pd.to_numeric(m_df["Ασίστ"]).sum(),
+                "Κλεψίματα": pd.to_numeric(m_df["Κλεψίματα"]).sum(),
+                "Λάθη": pd.to_numeric(m_df["Λάθη"]).sum(),
+                "Μπλοκ": pd.to_numeric(m_df["Μπλοκ"]).sum(),
+                "Φαουλ": pd.to_numeric(m_df["Φαουλ"]).sum(),
+                "PIR": pd.to_numeric(m_df["PIR"]).sum()
+            })
+            
+        match_totals_df = pd.DataFrame(match_sums_list)
+        results_list = []
+        
+        for r in ["ΝΙΚΗ", "ΗΤΤΑ"]:
+            r_df = match_totals_df[match_totals_df["Αποτέλεσμα"] == r]
+            if r_df.empty:
+                continue
+                
+            ftm_sum = r_df["Βολές Εύστοχες"].sum()
+            fta_sum = r_df["Βολές Συνολικές"].sum()
+            fg2m_sum = r_df["Δίποντα Εύστοχα"].sum()
+            fg2a_sum = r_df["Δίποντα Συνολικά"].sum()
+            fg3m_sum = r_df["Τρίποντα Εύστοχα"].sum()
+            fg3a_sum = r_df["Τρίποντα Συνολικά"].sum()
+            
+            results_list.append({
+                "Αποτέλεσμα": r,
+                "Πόντοι": round(r_df["Πόντοι"].mean(), 1),
+                "Βολές %": round((ftm_sum / fta_sum * 100), 1) if fta_sum > 0 else 0.0,
+                "Δίποντα %": round((fg2m_sum / fg2a_sum * 100), 1) if fg2a_sum > 0 else 0.0,
+                "Τρίποντα %": round((fg3m_sum / fg3a_sum * 100), 1) if fg3a_sum > 0 else 0.0,
+                "Ριμπάουντ Σύνολο": round(r_df["Ριμπάουντ Σύνολο"].mean(), 1),
+                "Ασίστ": round(r_df["Ασίστ"].mean(), 1),
+                "Κλεψίματα": round(r_df["Κλεψίματα"].mean(), 1),
+                "Λάθη": round(r_df["Λάθη"].mean(), 1),
+                "Μπλοκ": round(r_df["Μπλοκ"].mean(), 1),
+                "Φαουλ": round(r_df["Φαουλ"].mean(), 1),
+                "PIR": round(r_df["PIR"].mean(), 1)
+            })
+            
+        if not results_list:
+            st.warning("Δεν βρέθηκαν επαρκή δεδομένα για τον διαχωρισμό Νικών/Ηττών.")
+        else:
+            avg_by_result = pd.DataFrame(results_list)
+            columns_to_show = ["Αποτέλεσμα", "Πόντοι", "Βολές %", "Δίποντα %", "Τρίποντα %", "Ριμπάουντ Σύνολο", "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "PIR"]
+            
+            # Μορφοποίηση με 1 δεκαδικό χωρίς το σύμβολο %
+            styled_result = avg_by_result[columns_to_show].style.format({
+                "Βολές %": "{:.1f}", "Δίποντα %": "{:.1f}", "Τρίποντα %": "{:.1f}"
+            })
+            st.dataframe(styled_result, use_container_width=True, hide_index=True)
+            
+            st.subheader("📊 Οπτική Σύγκριση (Πόντοι vs PIR)")
+            fig = px.bar(avg_by_result, x="Αποτέλεσμα", y=["Πόντοι", "PIR"], barmode="group", text_auto=True)
+            st.plotly_chart(fig, use_container_width=True)
+
