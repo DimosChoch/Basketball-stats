@@ -370,7 +370,22 @@ elif menu == "Μέσοι Όροι (Νίκες vs Ήττες)":
             })
             st.dataframe(styled_result, use_container_width=True, hide_index=True)
             
-            st.subheader("📊 Οπτική Σύγκριση (Πόντοι vs PIR)")
-            fig = px.bar(avg_by_result, x="Αποτέλεσμα", y=["Πόντοι", "PIR"], barmode="group", text_auto=True)
+            st.subheader("📊 Οπτική Σύγκριση Στατιστικών (Νίκες vs Ήττες)")
+            
+            # 🔥 ΠΡΟΣΘΗΚΗ: Δυναμική επιλογή στατιστικού για το γράφημα σύγκρισης
+            chart_cols = ["Πόντοι", "Βολές %", "Δίποντα %", "Τρίποντα %", "Ριμπάουντ Σύνολο", "Ασίστ", "Κλεψίματα", "Λάθη", "Μπλοκ", "Φαουλ", "PIR"]
+            selected_stat_group = st.selectbox("Επιλέξτε Στατιστικό για Οπτική Σύγκριση", chart_cols)
+            
+            # Σχεδίαση του γραφήματος με βάση την επιλογή
+            fig = px.bar(
+                avg_by_result, 
+                x="Αποτέλεσμα", 
+                y=selected_stat_group, 
+                text_auto=True, 
+                color="Αποτέλεσμα",
+                color_discrete_map={"ΝΙΚΗ": "#2ca02c", "ΗΤΤΑ": "#d62728"}, # Πράσινο για νίκη, Κόκκινο για ήττα
+                title=f"Σύγκριση: Μέσος Όρος στην κατηγορία '{selected_stat_group}'"
+            )
             st.plotly_chart(fig, use_container_width=True)
+
 
