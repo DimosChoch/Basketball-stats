@@ -84,7 +84,10 @@ elif menu == "Εισαγωγή Στατιστικών":
         with col_m3:
             player_name = st.selectbox("Επιλέξτε Παίκτη", PLAYERS_LIST)
         with col_m4:
-            minutes = st.number_input("Χρόνος (Λεπτά)", min_value=0, value=15, step=1)
+            # 🔥 ΝΕΟ: Ξεχωριστή εισαγωγή για Λεπτά και Δευτερόλεπτα
+            min_input = st.number_input("Χρόνος (Λεπτά)", min_value=0, value=15, step=1)
+            sec_input = st.number_input("Χρόνος (Δευτερόλεπτα)", min_value=0, max_value=59, value=0, step=1)
+
             is_starter = st.checkbox("Βασική Πεντάδα (Starter);")
 
         st.markdown("---")
@@ -117,6 +120,8 @@ elif menu == "Εισαγωγή Στατιστικών":
             
         submit = st.form_submit_button("💾 Υπολογισμός & Αποθήκευση")
         if submit:
+            # 🔥 ΝΕΟ: Μετατροπή των δευτερολέπτων σε δεκαδικό λεπτό (π.χ. 15 λεπτά & 30 δευτ. = 15.5)
+            minutes = round(min_input + (sec_input / 60.0), 2)
             if ftm > fta or fg2m > fg2a or fg3m > fg3a:
                 st.error("❌ Σφάλμα: Τα εύστοχα σουτ δεν μπορεί να είναι περισσότερα από τα συνολικά!")
             else:
