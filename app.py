@@ -174,6 +174,7 @@ elif menu == "Ανάλυση & Γραφήματα":
         }
         
         display_df = pd.concat([match_df, pd.DataFrame([team_sums])], ignore_index=True)
+        display_df.iloc[:-1, display_df.columns.get_loc("Επιθετικά Ριμπάουντ Αντιπάλου")] = ""
         
         # ✨ ΝΕΟΣ ΤΡΟΠΟΣ: Προσθήκη emoji ⭐ στους starters για να ξεχωρίζουν σε Dark Mode
         if "Starting Five" in match_df.columns:
