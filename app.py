@@ -206,9 +206,16 @@ elif menu == "Ανάλυση & Γραφήματα":
         })
         
         # Εμφάνιση του τελικού πίνακα
-        st.dataframe(styled_df, height=400, use_container_width=True, hide_index=True)
+        # 🔥 ΔΙΟΡΘΩΘΗΚΕ: Σταθεροποίηση (Freeze) της πρώτης στήλης του Παίκτη κατά το Scroll δεξιά
+        st.dataframe(
+            styled_df, 
+            height=400, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={"Παίκτης": st.column_config.Column(pinned=True)}
+        )
 
-       
+    
         st.markdown("---")
         st.subheader("👤 Σύγκριση Παικτών (Γράφημα)")
         numeric_cols = [c for c in ALL_COLUMNS if c not in ["Αγώνας", "Παίκτης", "Βολές %", "Δίποντα %", "Τρίποντα %", "Αποτέλεσμα"]]
@@ -272,7 +279,14 @@ elif menu == "Μέσοι Όροι Παικτών (Season)":
             "Φαουλ": "{:.1f}",
             "PIR": "{:.1f}"
         })
-        st.dataframe(styled_season, use_container_width=True, hide_index=True)
+        
+        # 🔥 ΔΙΟΡΘΩΘΗΚΕ: Σταθεροποίηση της στήλης του Παίκτη και στους Μέσους Όρους της Σεζόν
+        st.dataframe(
+            styled_season, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={"Παίκτης": st.column_config.Column(pinned=True)}
+        )
         
         st.markdown("---")
         st.subheader("📈 Διακύμανση Απόδοσης ανά Παίκτη")
@@ -369,7 +383,7 @@ elif menu == "Μέσοι Όροι (Νίκες vs Ήττες)":
                 "PIR": "{:.1f}"
             })
             st.dataframe(styled_result, use_container_width=True, hide_index=True)
-            
+
             st.subheader("📊 Οπτική Σύγκριση Στατιστικών (Νίκες vs Ήττες)")
             
             # 🔥 ΠΡΟΣΘΗΚΗ: Δυναμική επιλογή στατιστικού για το γράφημα σύγκρισης
@@ -387,5 +401,3 @@ elif menu == "Μέσοι Όροι (Νίκες vs Ήττες)":
                 title=f"Σύγκριση: Μέσος Όρος στην κατηγορία '{selected_stat_group}'"
             )
             st.plotly_chart(fig, use_container_width=True)
-
-
