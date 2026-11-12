@@ -2,10 +2,15 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import os
+import unicodedata
+
+def normalize_name(name):
+    text = str(name).strip().upper()
+    return ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
 
 EXCEL_FILE = "basketball_stats_pro.xlsx"
 
-PLAYERS_LIST = ["ΜΕΛΕ", "ΧΟΧΛ", "ΣΤΑΜ", "ΚΟΥΚΟΥ", "ΔΡΑΜ", "ΚΟΝΤΟ", "ΠΙΤΑ", "ΚΡΗΤΙ", "ΜΗΛΙΩ", "ΦΟΥΝΤΟΥ", "ΜΑΝΟΥ", "ΣΤΡΙ", "ΓΚΟΤΣΟ", "ΚΥΡΙΑ", "ΠΑΠΑ", "ΓΙΑΝΝΑ", "ΔΕΛ"]
+PLAYERS_LIST = ["ΜΕΛΕ", "ΧΟΧΛ", "ΣΤΑΜ", "ΚΟΥΚΟΥ", "ΔΡΑΜ", "ΚΟΝΤΟ", "ΠΙΤΑ", "ΚΡΗΤ", "ΜΗΛΙΩ", "ΦΟΥΝΤ", "ΜΑΝΟΥ", "ΣΤΡΙΓ", "ΓΚΟΤΣ", "ΚΥΡΙΑ", "ΠΑΠΑ", "ΓΙΑΝΝΑ", "ΔΕΛ"]
 
 ALL_COLUMNS = [
     "Αγώνας", "Αποτέλεσμα", "Παίκτης", "Χρόνος", "Πόντοι", 
@@ -249,49 +254,84 @@ elif menu == "Μέσοι Όροι Παικτών (Season)":
     else:
         unique_players = PLAYERS_LIST
         season_rows = []
+        df_normalized_names = df["Παίκτης"].apply(normalize_name)
+        matched_norms = set()
         
         for p in unique_players:
-            p_df = df[df["Παίκτης"].astype(str).str.strip().str.upper() == str(p).strip().upper()]
+            p_norm = normalize_name(p)
+            p_df = df[df_normalized_names == p_norm]
+            
             if p_df.empty:
+                season_rows.append({
+                    "Παίκτης": p, "Αγώνες": 0, "Χρόνος": 0.0, "Πόντοι": 0.0,
+                    "Βολές %": 0.0, "Δίποντα %": 0.0, "Τρίποντα %": 0.0,
+                    "Ριμπάουντ Σύνολο": 0.0, "Ασίστ": 0.0, "Κλεψίματα": 0.0,
+                    "Λάθη": 0.0, "Μπλοκ": 0.0, "Φαουλ": 0.0, "PIR": 0.0,
+                    "eFG%": 0.0, "TS%": 0.0, "AST/TO Ratio": 0.0
+                })
                 continue
-                
-            ftm_s = pd.to_numeric(p_df["Βολές Εύστοχες"]).sum()
-            fta_s = pd.to_numeric(p_df["Βολές Συνολικές"]).sum()
-            fg2m_s = pd.to_numeric(p_df["Δίποντα Εύστοχα"]).sum()
-            fg2a_s = pd.to_numeric(p_df["Δίποντα Συνολικά"]).sum()
-            fg3m_s = pd.to_numeric(p_df["Τρίποντα Εύστοχα"]).sum()
-            fg3a_s = pd.to_numeric(p_df["Τρίποντα Συνολικά"]).sum()
+            
+            matched_norms.add(p_norm)
+            
+            ftm_s = pd.to_numeric(p_df["Βολές Εύστοχες"], errors='coerce').fillna(0).sum()
+            fta_s = pd.to_numeric(p_df["Βολές Συνολικές"], errors='coerce').fillna(0).sum()
+            fg2m_s = pd.to_numeric(p_df["Δίποντα Εύστοχα"], errors='coerce').fillna(0).sum()
+            fg2a_s = pd.to_numeric(p_df["Δίποντα Συνολικά"], errors='coerce').fillna(0).sum()
+            fg3m_s = pd.to_numeric(p_df["Τρίποντα Εύστοχα"], errors='coerce').fillna(0).sum()
+            fg3a_s = pd.to_numeric(p_df["Τρίποντα Συνολικά"], errors='coerce').fillna(0).sum()
             tot_fga_s = fg2a_s + fg3a_s
+            
+            pts_sum = pd.to_numeric(p_df["Πόντοι"], errors='coerce').fillna(0).sum()
+            ast_sum = pd.to_numeric(p_df["Ασίστ"], errors='coerce').fillna(0).sum()
+            to_sum = pd.to_numeric(p_df["Λάθη"], errors='coerce').fillna(0).sum()
             
             season_rows.append({
                 "Παίκτης": p,
                 "Αγώνες": int(len(p_df)),
-                "Χρόνος": round(pd.to_numeric(p_df["Χρόνος"]).mean(), 1),
-                "Πόντοι": round(pd.to_numeric(p_df["Πόντοι"]).mean(), 1),
+                "Χρόνος": round(pd.to_numeric(p_df["Χρόνος"], errors='coerce').fillna(0).mean(), 1),
+                "Πόντοι": round(pd.to_numeric(p_df["Πόντοι"], errors='coerce').fillna(0).mean(), 1),
                 "Βολές %": round((ftm_s / fta_s * 100), 1) if fta_s > 0 else 0.0,
                 "Δίποντα %": round((fg2m_s / fg2a_s * 100), 1) if fg2a_s > 0 else 0.0,
                 "Τρίποντα %": round((fg3m_s / fg3a_s * 100), 1) if fg3a_s > 0 else 0.0,
-                "Ριμπάουντ Σύνολο": round(pd.to_numeric(p_df["Ριμπάουντ Σύνολο"]).mean(), 1),
-                "Ασίστ": round(pd.to_numeric(p_df["Ασίστ"]).mean(), 1),
-                "Κλεψίματα": round(pd.to_numeric(p_df["Κλεψίματα"]).mean(), 1),
-                "Λάθη": round(pd.to_numeric(p_df["Λάθη"]).mean(), 1),
-                "Μπλοκ": round(pd.to_numeric(p_df["Μπλοκ"]).mean(), 1),
-                "Φαουλ": round(pd.to_numeric(p_df["Φαουλ"]).mean(), 1),
-                "PIR": round(pd.to_numeric(p_df["PIR"]).mean(), 1),
+                "Ριμπάουντ Σύνολο": round(pd.to_numeric(p_df["Ριμπάουντ Σύνολο"], errors='coerce').fillna(0).mean(), 1),
+                "Ασίστ": round(pd.to_numeric(p_df["Ασίστ"], errors='coerce').fillna(0).mean(), 1),
+                "Κλεψίματα": round(pd.to_numeric(p_df["Κλεψίματα"], errors='coerce').fillna(0).mean(), 1),
+                "Λάθη": round(pd.to_numeric(p_df["Λάθη"], errors='coerce').fillna(0).mean(), 1),
+                "Μπλοκ": round(pd.to_numeric(p_df["Μπλοκ"], errors='coerce').fillna(0).mean(), 1),
+                "Φαουλ": round(pd.to_numeric(p_df["Φαουλ"], errors='coerce').fillna(0).mean(), 1),
+                "PIR": round(pd.to_numeric(p_df["PIR"], errors='coerce').fillna(0).mean(), 1),
                 "eFG%": round(((fg2m_s + fg3m_s + 0.5 * fg3m_s) / tot_fga_s * 100), 1) if tot_fga_s > 0 else 0.0,
-                "TS%": round((pd.to_numeric(p_df["Πόντοι"]).sum() / (2 * (tot_fga_s + 0.44 * fta_s)) * 100), 1) if (tot_fga_s + 0.44 * fta_s) > 0 else 0.0,
-                "AST/TO Ratio": round((pd.to_numeric(p_df["Ασίστ"]).sum() / (1 if pd.to_numeric(p_df["Λάθη"]).sum() == 0 else pd.to_numeric(p_df["Λάθη"]).sum())), 1)
+                "TS%": round((pts_sum / (2 * (tot_fga_s + 0.44 * fta_s)) * 100), 1) if (tot_fga_s + 0.44 * fta_s) > 0 else 0.0,
+                "AST/TO Ratio": round((ast_sum / (1 if to_sum == 0 else to_sum)), 1)
             })
             
+        unmatched_in_df = [name for name in df["Παίκτης"].unique() if normalize_name(name) not in matched_norms]
+        if unmatched_in_df:
+            st.warning(f"⚠️ Βρέθηκαν ονόματα στα δεδομένα που δεν ταιριάζουν με τη λίστα παικτών: {unmatched_in_df}")
+            
         player_stats_clean = pd.DataFrame(season_rows)
-        styled_season = player_stats_clean.style.format({"Χρόνος": "{:.1f}", "Πόντοι": "{:.1f}", "Βολές %": "{:.1f}", "Δίποντα %": "{:.1f}", "Τρίποντα %": "{:.1f}", "Ριμπάουντ Σύνολο": "{:.1f}", "Ασίστ": "{:.1f}", "Κλεψίματα": "{:.1f}", "Λάθη": "{:.1f}", "Μπλοκ": "{:.1f}", "Φαουλ": "{:.1f}", "PIR": "{:.1f}", "eFG%": "{:.1f}", "TS%": "{:.1f}", "AST/TO Ratio": "{:.1f}"})
+        styled_season = player_stats_clean.style.format({
+            "Χρόνος": "{:.1f}", "Πόντοι": "{:.1f}", "Βολές %": "{:.1f}", 
+            "Δίποντα %": "{:.1f}", "Τρίποντα %": "{:.1f}", "Ριμπάουντ Σύνολο": "{:.1f}", 
+            "Ασίστ": "{:.1f}", "Κλεψίματα": "{:.1f}", "Λάθη": "{:.1f}", 
+            "Μπλοκ": "{:.1f}", "Φαουλ": "{:.1f}", "PIR": "{:.1f}", 
+            "eFG%": "{:.1f}", "TS%": "{:.1f}", "AST/TO Ratio": "{:.1f}"
+        })
         
-        st.dataframe(styled_season, use_container_width=True, hide_index=True, column_config={"Παίκτης": st.column_config.Column(pinned=True)})
+        dynamic_height = (len(player_stats_clean) + 1) * 35 + 10
+        
+        st.dataframe(
+            styled_season, 
+            use_container_width=True, 
+            hide_index=True, 
+            height=dynamic_height,
+            column_config={"Παίκτης": st.column_config.Column(pinned=True)}
+        )
         
         st.markdown("---")
         st.subheader("📈 Διακύμανση Απόδοσης ανά Παίκτη")
         graph_player = st.selectbox("Επιλέξτε Παίκτη για να δείτε την πορεία του", unique_players)
-        player_history = df[df["Παίκτης"].astype(str).str.strip().str.upper() == str(graph_player).strip().upper()].sort_values(by="Αγώνας")
+        player_history = df[df_normalized_names == normalize_name(graph_player)].sort_values(by="Αγώνας")
         stat_history = st.selectbox("Επιλέξτε Στατιστικό για την πορεία", ["Πόντοι", "PIR", "Ασίστ", "Ριμπάουντ Σύνολο", "Λάθη"])
         
         player_history[stat_history] = pd.to_numeric(player_history[stat_history], errors='coerce').fillna(0).astype(float)
