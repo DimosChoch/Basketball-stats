@@ -318,16 +318,18 @@ elif menu == "Μέσοι Όροι Παικτών (Season)":
             "eFG%": "{:.1f}", "TS%": "{:.1f}", "AST/TO Ratio": "{:.1f}"
         })
         
-        dynamic_height = (len(player_stats_clean) + 1) * 35 + 10
+        # Ορίζουμε μέγιστο ύψος τα 400px (περίπου 10 παίκτες). 
+        # Αν υπάρχουν περισσότεροι παίκτες, θα εμφανιστεί αυτόματα κάθετο scroll bar.
+        table_height = min((len(player_stats_clean) + 1) * 35 + 10, 400)
         
         st.dataframe(
             styled_season, 
             use_container_width=True, 
             hide_index=True, 
-            height=dynamic_height,
+            height=table_height,
             column_config={"Παίκτης": st.column_config.Column(pinned=True)}
         )
-        
+
         st.markdown("---")
         st.subheader("📈 Διακύμανση Απόδοσης ανά Παίκτη")
         graph_player = st.selectbox("Επιλέξτε Παίκτη για να δείτε την πορεία του", unique_players)
