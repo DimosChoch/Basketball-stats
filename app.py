@@ -178,7 +178,8 @@ elif menu == "Ανάλυση & Γραφήματα":
         
         team_sums = {
             "Αγώνας": selected_match, "Αποτέλεσμα": match_res, "Παίκτης": "🏀 ΣΥΝΟΛΟ ΟΜΑΔΑΣ",
-            "Χρόνος": match_df["Χρόνος"].sum(), "Πόντοι": match_df["Πόντοι"].sum(),
+            "Χρόνος": round(pd.to_numeric(match_df["Χρόνος"], errors='coerce').fillna(0).sum(), 2), 
+            "Πόντοι": match_df["Πόντοι"].sum(),
             "Βολές Εύστοχες": match_df["Βολές Εύστοχες"].sum(), "Βολές Συνολικές": match_df["Βολές Συνολικές"].sum(),
             "Βολές %": round((match_df["Βολές Εύστοχες"].sum() / match_df["Βολές Συνολικές"].sum() * 100), 1) if match_df["Βολές Συνολικές"].sum() > 0 else 0.0,
             "Δίποντα Εύστοχα": match_df["Δίποντα Εύστοχα"].sum(), "Δίποντα Συνολικά": match_df["Δίποντα Συνολικά"].sum(),
@@ -216,9 +217,12 @@ elif menu == "Ανάλυση & Γραφήματα":
             "eFG%", "TS%", "AST/TO Ratio"
         ]
         
+        display_df["Χρόνος"] = pd.to_numeric(display_df["Χρόνος"], errors='coerce').fillna(0.0).astype(float)
+
         styled_df = display_df[columns_view].style.apply(highlight_starters, axis=1)
         
         styled_df = styled_df.format({
+            "Χρόνος": "{:.2f}",
             "Βολές %": "{:.1f}",
             "Δίποντα %": "{:.1f}",
             "Τρίποντα %": "{:.1f}",
@@ -226,7 +230,7 @@ elif menu == "Ανάλυση & Γραφήματα":
             "TS%": "{:.1f}",
             "AST/TO Ratio": "{:.1f}"
         })
-        
+
         st.dataframe(
             styled_df, 
             height=400, 
